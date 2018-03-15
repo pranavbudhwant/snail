@@ -1,6 +1,4 @@
-#include<iostream>
 #include<omp.h>
-using namespace std;
 template <typename T>
 T** new_2D_array(size_t rows, size_t columns){
 	T **array = new T*[rows];
@@ -28,7 +26,7 @@ double transpose(T** array, T** trans, size_t rows, size_t cols){
 	return (double(end-beg)/CLOCKS_PER_SEC);
 }
 template <typename T>
-void multiply(T** A, T** B, T** C, size_t row_A, size_t col_A, size_t row_B, size_t col_B){
+bool multiply(T** A, T** B, T** C, size_t row_A, size_t col_A, size_t row_B, size_t col_B){
 	if(col_A == row_B){
 		int i,j,k;
 		#pragma omp parallel for private(j,k) schedule(static) shared(A,B,C)
@@ -39,9 +37,9 @@ void multiply(T** A, T** B, T** C, size_t row_A, size_t col_A, size_t row_B, siz
 					C[i][j] += A[i][k]*B[k][j];
 			}
 		}
+		return 1;
 	}
-	else
-		cout<<endl<<"Incompatible matrix sizes!";
+	return 0;
 }
 template <typename T>
 void gradient_descent(T** X, T** Y, T** theta, size_t m, size_t n, double alpha, long int num_iter){
