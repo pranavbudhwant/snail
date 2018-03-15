@@ -8,10 +8,11 @@ T** new_2D_array(size_t rows, size_t columns){
 }
 template <typename T>
 void subtract(T** A, T **B, T **C, size_t row, size_t col){
-	for(int i=0;i<row;i++){
-		for(int j=0;j<col;j++){
+	int chunk = 10,i,j;
+	#pragma omp parallel for schedule(guided, chunk) private(j) shared(A,B,C) num_threads(int(row/10))
+	for(i=0;i<row;i++){
+		for(j=0;j<col;j++)
 			C[i][j] = A[i][j] - B[i][j];
-		}
 	}
 }
 template <typename T>
@@ -49,6 +50,7 @@ void gradient_descent(T** X, T** Y, T** theta, size_t m, size_t n, double alpha,
 	beta[0][0] = T(alpha/m);
 	transpose(X,X_trans,m,n);
 	for(long int itr=0; itr<num_iter; itr++){
+		cout<<endl<<"Iteration: "<<itr;
 		multiply<T>(X,theta,hyp,m,n,n,1);
 		subtract<T>(hyp,Y,error,m,1);
 		multiply<T>(X_trans,error,err_adj,n,m,m,1);
