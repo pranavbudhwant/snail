@@ -3,7 +3,7 @@ using namespace std;
 template <typename T>
 T** new_2D_array(size_t rows, size_t columns){
 	T **array = new T*[rows];
-	for(size_t i=0;i<columns;i++) array[i] = new T[columns];
+	for(size_t i=0;i<rows;i++) array[i] = new T[columns];
 	return array;
 }
 template <typename T>
@@ -30,4 +30,3 @@ void multiply(T** A, T** B, T** C, size_t row_A, size_t col_A, size_t row_B, siz
 	else
 		cout<<endl<<"Incompatible matrix sizes!";
 }
-
