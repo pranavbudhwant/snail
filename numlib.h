@@ -1,4 +1,7 @@
-#include<omp.h>
+#include <omp.h>
+#include <cstring>
+#include <fstream>
+#include <iomanip>
 
 /*
 new_2D_array():
@@ -14,6 +17,115 @@ T** new_2D_array(size_t num_rows, size_t num_columns){
 	T **array = new T*[num_rows];
 	for(size_t i=0;i<num_rows;i++) array[i] = new T[num_columns];
 	return array;
+}
+
+/*
+csv_write():
+	Writes the given 2D array as csv to the given file.
+	Parameters:
+		const char *file_name: name of the file to which the array has to be written.
+		char mode: 
+			'a': append
+			'w': overwrite
+		T **array: 2D array to be written to the file.
+		size_t num_rows: number of rows in 2D array.
+		size_t num_columns: number of columns in 2D array.
+	Returns:
+		bool:
+			0: Error in writing.
+			1: Successful operation.
+}
+*/
+template <typename T>
+bool csv_write(const char *file_name, char mode, T **array, size_t num_rows, size_t num_columns){
+	std::ofstream file; //Output file stream object, used to handle the file.
+	if(mode == 'a') file.open(file_name, std::ios::app); //Mode 'a' == append to file.
+	else if(mode == 'w') file.open(file_name, std::ios::out); //Mode 'w' == write to file.
+	else return 0; //Invalid mode
+	if(file.is_open()){
+		for(int i=0;i<num_rows;i++){
+			for(int j=0;j<num_columns;j++){
+				if(j==num_columns-1) file<<std::setprecision(10)<<array[i][j];
+				else file<<std::setprecision(10)<<array[i][j]<<",";
+			}
+			file<<std::endl;
+		}
+		file.close(); //Close the current file.
+		return 1; //Return successful operation.
+	}
+	return 0; //Error in opening the file.
+} 
+
+/*
+csv_read():
+	Reads given csv file and stores the data in the given 2D array.
+	Parameters:
+		const char *file_name: name of the file to which the array has to be written. 
+		int mode:
+			0: Numerical mode
+			1: String mode
+		T **array: 2D array to store the data from the file.
+		long long int num_rows: Number of rows read from the file.
+		long long int num_columns: Number of columns read from the file.
+	Returns:
+		bool:
+			0: Error in reading.
+			1: Successful operation.
+*/
+template <typename T>
+bool csv_read(const char *file_name, int mode, T **array, long long int &num_rows, long long int &num_columns){
+	//Initialize
+	num_rows = 0;
+	num_columns = 0;
+	std::string value; //Stores the line read from the file.
+	char *token; //Stores comma seperated values in a line.
+	std::ifstream file; //File object to handle the file
+	file.open(file_name, std::ios::in);
+	if(file.is_open()){
+		while( file.good() ){
+			std::getline(file, value, '\n'); //Read a line
+			if(value.length()){
+				num_columns = 0;
+				token = strtok(((char*)value.c_str()),","); //Split the string seperated by ",".
+				while(token!=NULL){
+					if(token){
+						if(!mode) array[num_rows][num_columns] = (T)atof(token); //Convert value to double if numerical mode is selected.
+						else array[num_rows][num_columns] = (T)(*token);
+					}
+					token = strtok(NULL,",");
+					num_columns++; 
+				}
+				num_rows++;
+			}
+		}
+		file.close(); //Close the file.
+		return 1; //Successful operation.
+	}
+	return 0; //Error in opening file.
+}
+
+/*
+copy_matrix():
+	Copies specific rows of one matrix to the other.
+	Parameters:
+		T **dest: Destination matrix.
+		T **src: Source matrix.
+		unsigned long long int row_start: starting index of the row to be copied.
+		unsigned long long int column_start: starting index of the column to be copied.
+		unsigned long long int num_rows: number of rows to be copied.
+		unsigned long long int num_columns: number of columns to be copied.
+	Returns:
+		void
+*/
+template <typename T>
+void copy_matrix(T **dest, T **src, unsigned long long int row_start, unsigned long long int column_start, unsigned long long int num_rows, unsigned long long int num_columns){
+	unsigned long long int i,j;
+	#pragma omp parallel for private(j) schedule(static) num_threads(2)
+	for(i=row_start; i<num_rows;i++){
+		for(j=column_start; j<num_columns; j++){
+			dest[i][j] = src[i][j];
+		}
+	}
 }
 
 /*
