@@ -234,3 +234,101 @@ void gradient_descent(T** X, T** Y, T** theta, size_t m, size_t n, double alpha,
 		subtract<T>(theta,error,theta,n,1); //theta -= error
 	}
 }
+/*
+kmeans():
+	Assignes cluster ID to each sample in dataset
+	Parameters:
+		T **X: Input vector, with size mxn.
+		int *C: vector to store the cluster number for each sample point, has size mx1
+		T **mu: centroid vector with random initialized values, of size kxn.
+		size_t m: number of training examples.
+		size_t n: number of features.
+		size_t k: number of clusters.
+		long int num_iter: number of iterations.
+	Returns:
+		void			
+*/
+template <typename T>
+void kmeans(T** X, int *C, T **mu, long long int m, long long int n, long long int k, long long int num_iter){
+	int l;
+	for(int i=0;i<num_iter;i++){	//Run K Means
+		#pragma omp parallel for schedule(static) private(l)	//Assigning a cluster to each point in sample dataset
+		for(int j=0;j<m;j++){
+			double min_distance = 99999;
+			int cent = 0;
+				
+			for(l=0;l<k;l++){	//Calculate distance from every cluster centroid mu
+				double sum=0;
+				for(int p=0;p<n;p++)	//Calculate the euclidian distance
+					sum += pow((X[j][p] - mu[l][p]),2); 
+				sum = sqrt(sum);
+				if(sum < min_distance){
+					min_distance = sum;
+					cent = l;
+				}
+			}
+			C[j] = cent; 	//Assign the cluster with minimum distance
+		}
+		#pragma omp parallel for schedule(static) private(l)	//Centroid update
+		for(int j=0;j<k;j++){
+			double sum[n] = {0}; int count=0;
+			for(int l=0;l<m;l++){
+				if(C[l]==j){
+					for(int k=0;k<n;k++){
+						sum[k]+=X[l][k];
+					}
+					count++;
+				}
+			}
+			for(int l=0;l<n;l++){
+				mu[j][l] = sum[l]/count;
+			}
+		}
+	}
+}
+
+/*
+cluster():
+	Computes the global optima for all the random initializations of centroid coordinates in num_iter iterations
+	Parameters:
+		T **X: Input vector, with size mxn.
+		int *C: vector to store the cluster number for each sample point, has size mx1
+		size_t m: number of training examples.
+		size_t n: number of features.
+		size_t k: number of clusters.
+		long int num_iter: number of iterations.
+	Returns:
+		void			
+*/
+template <typename T>
+void cluster(T **X, int *C, size_t m, size_t n, size_t k, long int num_iter){
+	int temp_C[m], i,j,random_index;
+	double min_cost = 999999999, temp_cost, **mu;
+	mu = new_2D_array<T>(k,n);
+	
+	#pragma omp parallel for schedule(static) private(i,j,temp_cost)
+	for(long long int q=0; q<num_iter; q++){
+		
+		#pragma omp parallel for schedule(static) private(j) shared(mu, X, m) num_threads(2)
+		for(i=0;i<k;i++){
+			random_index = rand()%m; 	//Set Initial Centroids to random values
+			for(j=0;j<n;j++)
+				mu[i][j] = X[random_index][j];
+		}
+		
+		kmeans<T>(X, temp_C, mu, m, n, k, 500); 	//Run K Means for qth iteration each 500 times
+
+		temp_cost = 0;
+		for(i=0;i<m;i++){ 	//Compute Cost for qth iteration
+			for(j=0;j<n;j++){
+				temp_cost += pow((X[i][j] - mu[ temp_C[i] ][j]),2);
+			}
+		}
+		temp_cost /= m;		// mean squared difference (or distance)
+		
+		if(temp_cost < min_cost){	//Update values of C array with values of temp_C array of iteration with mininmum cost
+			min_cost = temp_cost;
+			for(j=0;j<m;j++) C[j] = temp_C[j];
+		}
+	}
+}
