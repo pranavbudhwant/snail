@@ -1,2 +1,2 @@
-# snail
-Snail - A fast linear algebra library for C++
+# SNAIL
+SNAIL - A fast AI library for C++
