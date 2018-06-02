@@ -23,11 +23,11 @@ class DataFrame{
 
 	operator = - copies the given DataFrame to calling DataFrame
 
-	trimRowTop() - removes the row at index 0
-	trimRowBottom() - removes the row at index num_rows - 1
+	trimTopRow() - removes the row at index 0
+	trimBottomRow() - removes the row at index num_rows - 1
 	trimRow(int rowIndex) - removes the row with index rowIndex
-	trimColTop() - removes the column with index 0
-	trimColBottom() - removes the column with index num_columns - 1 
+	trimFirstCol() - removes the column with index 0
+	trimLastCol() - removes the column with index num_columns - 1 
 	trimCol(int colIndex) - removes the column with index colIndex
 
 	insertRow(array/DataFrame, index) - inserts the given row at the given index
@@ -156,6 +156,71 @@ public:
 				subframe.set(m, n, frame[i][j]);
 		}
 		return subframe;
+	}
+
+	void trimTopRow(){
+		if(num_rows >= 1){
+			for(int i=0; i+1<num_rows; i++){
+				for(int j=0; j<num_columns; j++){
+					frame[i][j] = frame[i+1][j];
+				}
+			}
+			delete frame[num_rows - 1];
+			num_rows--;
+			if(num_rows == 0) num_columns = 0;
+		}
+	}
+	void trimBottomRow(){
+		if(num_rows >= 1){
+			delete frame[num_rows - 1];
+			num_rows--;
+			if(num_rows == 0) num_columns = 0;
+		}
+	}
+	void trimRow(int rowIndex){
+		if(num_rows >= 1){
+			if(rowIndex >= 0 && rowIndex < num_rows){
+				for(int i=rowIndex; i+1<num_rows; i++){
+					for(int j=0; j<num_columns; j++){
+						frame[i][j] = frame[i+1][j];
+					}
+				}
+				delete frame[num_rows - 1];
+				num_rows--;
+				if(num_rows == 0) num_columns = 0;			
+			}
+		}
+	}
+
+	void trimFirstColumn(){
+		if(num_columns >= 1){
+			for(int j=0; j+1<num_columns; j++){
+				for(int i=0; i<num_rows; i++){
+					frame[i][j] = frame[i][j+1];
+				}
+			}
+			num_columns--;
+			if(num_columns == 0) num_rows = 0;
+		}
+	}
+	void trimLastColumn(){
+		if(num_columns >= 1){
+			num_columns--;
+			if(num_columns == 0) num_rows = 0;			
+		}
+	}
+	void trimColumn(int columnIndex){
+		if(num_columns >= 1){
+			if(columnIndex >= 0 && columnIndex < num_columns){
+				for(int j=columnIndex; j+1<num_columns; j++){
+					for(int i=0; i<num_rows; i++){
+						frame[i][j] = frame[i][j+1];
+					}
+				}
+				num_columns--;
+				if(num_columns == 0) num_rows = 0;				
+			}
+		}
 	}
 
 	friend ostream& operator << (ostream &out, const DataFrame &d){
