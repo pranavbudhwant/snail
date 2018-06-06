@@ -1,3 +1,15 @@
+#include<iostream>
+#include<fstream>
+#include<iomanip>
+#include<vector>
+#include<cstring>
+#include<cmath>
+#include<cstdlib>
+#include<ctime>
+using namespace std;
+
+class IO;
+
 template <typename T>
 class DataFrame{
 	//Functions to be written:
@@ -520,9 +532,278 @@ public:
 	}
 };
 
+int main(int argc, char **argv){
 
-class IO{/*
-	csv_read() - reads the given csv file and returns a DataFrame object
-	csv_write() - writes the given DataFrame to the given file
+	double alpha = atof(argv[0]);
+	int num_iter = atoi(argv[1]);
+
+	DataFrame<double> X(20,1);
+	DataFrame<double> y(20,1);
+	for(int i=0; i<20; i++){
+		//X.set(i,0,1);
+		X.set(i,0,i);
+		y.set(i,0,i+2+pow(i,2));
+	}
+	int index_arr[] = {0}, deg[] = {2};
+	DataFrame<int> indices(index_arr, 1), degrees(deg, 1);
+	X = X.polynomialFeatures(indices, degrees);
+
+	//Normalize:
+	X.normalize();
+	//y.normalize();
+
+	DataFrame<double> ones(X.rowLength(), 1, 1);
+	X = X.insertColumn(ones, 0);
+	DataFrame<double> dataset(X);
+	dataset = dataset.insertColumn(y, 3);
+	cout<<endl<<dataset;
+	LinearRegression<double> regressor;
+	regressor.fit(X, y, alpha, num_iter);
+	cout<<endl<<"Parameter vector: "<<endl<<regressor.parameterVector();
+	cout<<endl<<"Prediction: "<<endl<<regressor.predict(X);
+
+/*
+	
+	DataFrame<int> d(3,4);
+	for (int i = 0; i < 3; ++i)
+	{
+		for(int j=0; j<4; j++){
+			d.set(i, j, j+1);
+		}
+	}
+
+	cout<<endl<<d;
+
+	DataFrame<int> column(3,1);
+	for(int i=0; i<3; i++) column.set(i, 0, 1);
+
+	DataFrame<int> row(1,5);
+	for(int i=0; i<5; i++) row.set(0, i, 9);
+
+	d = d.insertColumn(column, 0);
+	cout<<endl<<d;
+	cout<<endl<<d.size();
+
+	d = d.insertRow(row, 3);
+	cout<<endl<<d;
+	cout<<endl<<d.size();
+
+	/*DataFrame<int> indices(1,2), degrees(1,2);
+	indices.set(0,0,1);
+	indices.set(0,1,2);
+	degrees.set(0,0,5);
+	degrees.set(0,1,10);
+
+	cout<<endl<<d.polynomialFeatures(indices, degrees);
+
+	
+	IO Testing
+	
+	IO write;
+	DataFrame<double> X(200,130);
+	
+	write.csv_write<double>("io_test.csv", 'w', X);
 	*/
+	/* DataFrame Testing
+	DataFrame<int> d1(10), d2(5,5);
+	int arr[3] = {1,2,3};
+
+	int **ar = new int*[3];
+	for(int i=0; i<3; i++)
+		ar[i] = new int[4];
+
+	for(int i=0; i<3; i++){
+		for(int j=0; j<4; j++)
+			ar[i][j] = i;
+	}
+
+	double **dar = new double*[3];
+	for(int i=0; i<3; i++)
+		dar[i] = new double[4];
+
+	for(int i=0; i<3; i++){
+		for(int j=0; j<4; j++)
+			dar[i][j] = i;
+	}
+
+
+	DataFrame<int> d3(arr, 3);
+	DataFrame<double> d4(dar, 3, 4);
+	
+	cout<<d1;
+	cout<<endl<<"Size: "<<d1.size();
+	cout<<endl;
+	cout<<d2;
+	cout<<endl<<"Size: "<<d2.size();
+	cout<<endl;
+	cout<<d3;
+	cout<<endl<<"Size: "<<d3.size();
+	cout<<endl;
+	cout<<d4;
+	cout<<endl<<"Size: "<<d4.size();
+
+	DataFrame<double> d5(d4);
+	cout<<endl;
+	cout<<d5;
+	cout<<endl<<"Size: "<<d5.size();
+
+	cout<<endl<<"Rows: ";
+	for(int i=0; i<3; i++){
+		cout<<endl<<d5.rowAt(i);
+		cout<<endl<<"Size: "<<d5.rowAt(i).size();
+	}
+
+	cout<<endl<<"Columns: ";
+	for(int i=0; i<4; i++){
+		cout<<endl<<d5.columnAt(i);
+		cout<<endl<<"Size: "<<d5.columnAt(i).size();
+	}
+
+	cout<<endl<<"Subframe 0,0:"<<endl<<d5.subFrame(0,0);
+	cout<<endl<<"Subframe 1,1:"<<endl<<d5.subFrame(1,1);
+	cout<<endl<<"Subframe 2,2:"<<endl<<d5.subFrame(2,2);
+
+	DataFrame<double> t;
+	t = d5.subFrame(0,0);
+	cout<<endl<<"T: "<<endl<<t;
+
+	cout<<endl<<"d4 transpose: "<<endl<<d4.transpose()<<endl<<"Size: "<<d4.transpose().size();
+	cout<<endl<<"d4 * d4"<<endl<<d4*d4.transpose();
+	cout<<endl<<"d4 + d4"<<endl<<d4+d4;
+	cout<<endl<<"d4 - d4"<<endl<<d4-d4;
+	d4.normalize();
+	cout<<endl<<"d4 normalized:\n"<<d4;
+
+
+	d5.normalizeColumn(1);
+	d5.normalizeRow(2);
+	cout<<endl<<"d5 norm: "<<endl<<d5;
+	cout<<endl<<d5.rowAt(2);
+	cout<<endl<<d5.rowAt(2).max();
+	cout<<endl<<d5.rowAt(2).min();
+	cout<<endl<<d5.columnAt(2);
+	cout<<endl<<d5.columnAt(2).max();
+	cout<<endl<<d5.columnAt(2).min();
+
+	cout<<endl<<"d5:\n"<<d5<<endl<<"Size: "<<d5.size();
+	d5.trimTopRow();
+	cout<<endl<<"d5:\n"<<d5<<endl<<"Size: "<<d5.size();
+	d5.trimRow(1);
+	cout<<endl<<"d5:\n"<<d5<<endl<<"Size: "<<d5.size();
+	d5.trimBottomRow();
+	cout<<endl<<"d5:\n"<<d5<<endl<<"Size: "<<d5.size();
+	d5.trimTopRow();
+
+	cout<<endl<<"d4:\n"<<d4<<endl<<"Size: "<<d4.size();
+	d4.trimFirstColumn();
+	cout<<endl<<"d4:\n"<<d4<<endl<<"Size: "<<d4.size();
+	d4.trimColumn(1);
+	cout<<endl<<"d4:\n"<<d4<<endl<<"Size: "<<d4.size();
+	d4.trimLastColumn();
+	cout<<endl<<"d4:\n"<<d4<<endl<<"Size: "<<d4.size();
+	d4.trimColumn(0);
+	cout<<endl<<"d4:\n"<<d4<<endl<<"Size: "<<d4.size();
+ 	*/
+
+	return 0;
+}
+
+
+/*
+class IO{
+public:
+	/*
+	csv_write():
+		Writes the given 2D array as csv to the given file.
+		Parameters:
+			const char *file_name: name of the file to which the array has to be written.
+			char mode: 
+				'a': append
+				'w': overwrite
+			T **array: 2D array to be written to the file.
+			size_t num_rows: number of rows in 2D array.
+			size_t num_columns: number of columns in 2D array.
+		Returns:
+			bool:
+				0: Error in writing.
+				1: Successful operation.
+	}
+	template <typename T>
+	void csv_write(const char *file_name, char mode, DataFrame<T> data){
+		std::ofstream file; //Output file stream object, used to handle the file.
+		if(mode == 'a') file.open(file_name, std::ios::app); //Mode 'a' == append to file.
+		else if(mode == 'w') file.open(file_name, std::ios::out); //Mode 'w' == write to file.
+		else return; //Invalid mode
+		if(file.is_open()){
+			for(int i=0;i<data.num_rows;i++){
+				for(int j=0;j<data.num_columns;j++){
+					if(j==data.num_columns-1) file<<std::setprecision(10)<<data.frame[i][j];
+					else file<<std::setprecision(10)<<data.frame[i][j]<<",";
+				}
+				file<<std::endl;
+			}
+			file.close(); //Close the current file.
+			return; //Return successful operation.
+		}
+		return; //Error in opening the file.
+	} 
+	
+	/*
+	csv_read():
+		Reads given csv file and stores the data in the given 2D array.
+		Parameters:
+			const char *file_name: name of the file to which the array has to be written. 
+			int mode:
+				0: Numerical mode
+				1: String mode
+			T **array: 2D array to store the data from the file.
+			long long int num_rows: Number of rows read from the file.
+			long long int num_columns: Number of columns read from the file.
+		Returns:
+			bool:
+				0: Error in reading.
+				1: Successful operation.
+	
+	template <typename T>
+	DataFrame<T> csv_read(const char *file_name, int mode){
+		//Initialize
+		long int num_rows = 0;
+		long int num_columns = 0;
+		std::string value; //Stores the line read from the file.
+		char *token; //Stores comma seperated values in a line.
+
+		vector<T> array;
+
+		std::ifstream file; //File object to handle the file
+		file.open(file_name, std::ios::in);
+		if(file.is_open()){
+			while( file.good() ){
+				std::getline(file, value, '\n'); //Read a line
+				if(value.length()){
+					num_columns = 0;
+					token = strtok(((char*)value.c_str()),","); //Split the string seperated by ",".
+					while(token!=NULL){
+						if(token){
+							if(!mode) array.push_back((double)atof(token)); //Convert value to double if numerical mode is selected.
+							else array.push_back((char*)(*token));
+						}
+						token = strtok(NULL,",");
+						num_columns++; 
+					}
+					num_rows++;
+				}
+			}
+			file.close(); //Close the file.
+			DataFrame<T> data(num_rows, num_columns);
+			for(int i=0; i<num_rows; i++){
+				for(int j=0; j<num_columns; j++){
+					data.frame[i][j] = array[i + j*num_rows];
+				}
+			}
+			return 1; //Successful operation.
+		}
+		return 0; //Error in opening file.
+	}
+
 };
+*/
